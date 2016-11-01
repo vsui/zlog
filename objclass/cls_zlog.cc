@@ -95,7 +95,7 @@ cls_method_handle_t h_get_projection;
 
 struct cls_zlog_log_entry {
   int flags;
-  bufferlist data;
+  ceph::bufferlist data;
 
   static const int INVALIDATED = 1;
   static const int TRIMMED     = 2;
@@ -103,21 +103,21 @@ struct cls_zlog_log_entry {
   cls_zlog_log_entry() : flags(0)
   {}
 
-  void encode(bufferlist& bl) const {
-    ENCODE_START(1, 1, bl);
-    ::encode(flags, bl);
-    ::encode(data, bl);
-    ENCODE_FINISH(bl);
+  void encode(ceph::bufferlist& bl) const {
+    //ENCODE_START(1, 1, bl);
+    //::encode(flags, bl);
+    //::encode(data, bl);
+    //ENCODE_FINISH(bl);
   }
 
-  void decode(bufferlist::iterator& bl) {
-    DECODE_START(1, bl);
-    ::decode(flags, bl);
-    ::decode(data, bl);
-    DECODE_FINISH(bl);
+  void decode(ceph::bufferlist::iterator& bl) {
+    //DECODE_START(1, bl);
+    //::decode(flags, bl);
+    //::decode(data, bl);
+    //DECODE_FINISH(bl);
   }
 };
-WRITE_CLASS_ENCODER(cls_zlog_log_entry)
+//WRITE_CLASS_ENCODER(cls_zlog_log_entry)
 
 /*
  * Convert value into zero-padded string for omap comparisons.
@@ -152,7 +152,7 @@ static inline int strtou64(const std::string value, uint64_t *out)
 
 static int check_epoch(cls_method_context_t hctx, uint64_t epoch)
 {
-  bufferlist bl;
+  ceph::bufferlist bl;
   int ret = cls_cxx_map_get_val(hctx, ZLOG_EPOCH_KEY, &bl);
   if (ret < 0) {
     CLS_LOG(10, "ERROR: check_epoch(): failed to read epoch (%d)", ret);
@@ -161,9 +161,9 @@ static int check_epoch(cls_method_context_t hctx, uint64_t epoch)
 
   uint64_t cur_epoch;
   try {
-    bufferlist::iterator it = bl.begin();
-    ::decode(cur_epoch, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = bl.begin();
+    //::decode(cur_epoch, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: check_epoch(): failed to decode epoch entry");
     return -EIO;
   }
@@ -179,7 +179,7 @@ static int check_epoch(cls_method_context_t hctx, uint64_t epoch)
 static int __max_position(cls_method_context_t hctx, uint64_t *pposition)
 {
   // read max_position from omap
-  bufferlist bl;
+  ceph::bufferlist bl;
   int ret = cls_cxx_map_get_val(hctx, ZLOG_MAX_POS_KEY, &bl);
   if (ret < 0) {
     CLS_LOG(10, "NOTICE: __max_position(): failed to read max_position (%d)", ret);
@@ -189,9 +189,9 @@ static int __max_position(cls_method_context_t hctx, uint64_t *pposition)
   // decode
   uint64_t position;
   try {
-    bufferlist::iterator it = bl.begin();
-    ::decode(position, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = bl.begin();
+    //::decode(position, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: __max_position(): failed to decode max_position entry");
     return -EIO;
   }
@@ -200,14 +200,14 @@ static int __max_position(cls_method_context_t hctx, uint64_t *pposition)
   return 0;
 }
 
-static int read(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+static int read(cls_method_context_t hctx, ceph::bufferlist *in, ceph::bufferlist *out)
 {
   // decode input operation
   cls_zlog_read_op op;
   try {
-    bufferlist::iterator it = in->begin();
-    ::decode(op, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = in->begin();
+    //::decode(op, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: read(): failed to decode input");
     return -EINVAL;
   }
@@ -219,7 +219,7 @@ static int read(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   }
 
   // lookup position in omap index
-  bufferlist bl;
+  ceph::bufferlist bl;
   std::string key = u64tostr(op.position);
   ret = cls_cxx_map_get_val(hctx, key, &bl);
   if (ret < 0 && ret != -ENOENT) {
@@ -234,9 +234,9 @@ static int read(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   // otherwise try to decode the entry
   cls_zlog_log_entry entry;
   try {
-    bufferlist::iterator it = bl.begin();
-    ::decode(entry, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = bl.begin();
+    //::decode(entry, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: read(): failed to decode index entry");
     return -EIO;
   }
@@ -251,14 +251,14 @@ static int read(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   return CLS_ZLOG_OK;
 }
 
-static int write(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+static int write(cls_method_context_t hctx, ceph::bufferlist *in, ceph::bufferlist *out)
 {
   // decode input operation
   cls_zlog_write_op op;
   try {
-    bufferlist::iterator it = in->begin();
-    ::decode(op, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = in->begin();
+    //::decode(op, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: write(): failed to decode input");
     return -EINVAL;
   }
@@ -270,7 +270,7 @@ static int write(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   }
 
   // lookup position in index
-  bufferlist bl;
+  ceph::bufferlist bl;
   std::string key = u64tostr(op.position);
   ret = cls_cxx_map_get_val(hctx, key, &bl);
   if (ret < 0 && ret != -ENOENT) {
@@ -283,8 +283,8 @@ static int write(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
     cls_zlog_log_entry entry;
     entry.data = op.data;
 
-    bufferlist entrybl;
-    ::encode(entry, entrybl);
+    ceph::bufferlist entrybl;
+    //::encode(entry, entrybl);
     ret = cls_cxx_map_set_val(hctx, key, &entrybl);
     if (ret < 0) {
       CLS_LOG(0, "ERROR: write(): failed to write index");
@@ -304,8 +304,8 @@ static int write(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
     // hasn't yet been set. note that if the first write is to position 0,
     // then the second condition lets the max_position initialization occur.
     if (op.position > cur_max_position || ret == -ENOENT) {
-      bufferlist max_positionbl;
-      ::encode(op.position, max_positionbl);
+      ceph::bufferlist max_positionbl;
+      //::encode(op.position, max_positionbl);
       ret = cls_cxx_map_set_val(hctx, ZLOG_MAX_POS_KEY, &max_positionbl);
       if (ret < 0) {
         CLS_LOG(0, "ERROR: write(): failed to update max_position");
@@ -326,14 +326,14 @@ static int write(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   return CLS_ZLOG_READ_ONLY;
 }
 
-static int fill(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+static int fill(cls_method_context_t hctx, ceph::bufferlist *in, ceph::bufferlist *out)
 {
   // decode input operation
   cls_zlog_fill_op op;
   try {
-    bufferlist::iterator it = in->begin();
-    ::decode(op, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = in->begin();
+    //::decode(op, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: fill(): failed to decode input");
     return -EINVAL;
   }
@@ -345,7 +345,7 @@ static int fill(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   }
 
   // lookup position in the omap index
-  bufferlist bl;
+  ceph::bufferlist bl;
   std::string key = u64tostr(op.position);
   ret = cls_cxx_map_get_val(hctx, key, &bl);
   if (ret < 0 && ret != -ENOENT) {
@@ -359,8 +359,8 @@ static int fill(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   if (ret == -ENOENT) {
     entry.flags |= cls_zlog_log_entry::INVALIDATED;
     entry.flags |= cls_zlog_log_entry::TRIMMED;
-    bufferlist entrybl;
-    ::encode(entry, entrybl);
+    ceph::bufferlist entrybl;
+    //::encode(entry, entrybl);
     ret = cls_cxx_map_set_val(hctx, key, &entrybl);
     if (ret < 0) {
       CLS_LOG(0, "ERROR: fill(): failed to write index");
@@ -371,9 +371,9 @@ static int fill(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
 
   // decode the entry from the index
   try {
-    bufferlist::iterator it = bl.begin();
-    ::decode(entry, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = bl.begin();
+    //::decode(entry, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: fill(): failed to decode log entry");
     return -EIO;
   }
@@ -386,14 +386,14 @@ static int fill(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   return CLS_ZLOG_READ_ONLY;
 }
 
-static int trim(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+static int trim(cls_method_context_t hctx, ceph::bufferlist *in, ceph::bufferlist *out)
 {
   // decode input operation
   cls_zlog_trim_op op;
   try {
-    bufferlist::iterator it = in->begin();
-    ::decode(op, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = in->begin();
+    //::decode(op, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: trim(): failed to decode input");
     return -EINVAL;
   }
@@ -405,7 +405,7 @@ static int trim(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   }
 
   // lookup position in the omap index
-  bufferlist bl;
+  ceph::bufferlist bl;
   std::string key = u64tostr(op.position);
   ret = cls_cxx_map_get_val(hctx, key, &bl);
   if (ret < 0 && ret != -ENOENT) {
@@ -418,8 +418,8 @@ static int trim(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   // if position hasn't been written, trim it
   if (ret == -ENOENT) {
     entry.flags |= cls_zlog_log_entry::TRIMMED;
-    bufferlist entrybl;
-    ::encode(entry, entrybl);
+    ceph::bufferlist entrybl;
+    //::encode(entry, entrybl);
     ret = cls_cxx_map_set_val(hctx, key, &entrybl);
     if (ret < 0) {
       CLS_LOG(0, "ERROR: trim(): failed to write index");
@@ -430,9 +430,9 @@ static int trim(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
 
   // decode the entry from the index
   try {
-    bufferlist::iterator it = bl.begin();
-    ::decode(entry, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = bl.begin();
+    //::decode(entry, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: trim(): failed to decode log entry");
     return -EIO;
   }
@@ -444,8 +444,8 @@ static int trim(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   entry.data.clear();
   entry.flags |= cls_zlog_log_entry::TRIMMED;
 
-  bufferlist entrybl;
-  ::encode(entry, entrybl);
+  ceph::bufferlist entrybl;
+  //::encode(entry, entrybl);
   ret = cls_cxx_map_set_val(hctx, key, &entrybl);
   if (ret < 0) {
     CLS_LOG(0, "ERROR: trim(): failed to update index");
@@ -455,20 +455,20 @@ static int trim(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   return CLS_ZLOG_OK;
 }
 
-static int seal(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+static int seal(cls_method_context_t hctx, ceph::bufferlist *in, ceph::bufferlist *out)
 {
   // decode input operation
   cls_zlog_seal_op op;
   try {
-    bufferlist::iterator it = in->begin();
-    ::decode(op, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = in->begin();
+    //::decode(op, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: seal(): failed to decode input");
     return -EINVAL;
   }
 
   // read the current epoch value (may not yet be set)
-  bufferlist bl;
+  ceph::bufferlist bl;
   int ret = cls_cxx_map_get_val(hctx, ZLOG_EPOCH_KEY, &bl);
   if (ret < 0 && ret != -ENOENT) {
     CLS_LOG(10, "NOTICE: seal(): failed to read max_position (%d)", ret);
@@ -480,9 +480,9 @@ static int seal(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
     uint64_t cur_epoch;
 
     try {
-      bufferlist::iterator it = bl.begin();
-      ::decode(cur_epoch, it);
-    } catch (buffer::error& err) {
+      ceph::bufferlist::iterator it = bl.begin();
+      //::decode(cur_epoch, it);
+    } catch (ceph::buffer::error& err) {
       CLS_LOG(0, "ERROR: seal(): failed to decode epoch entry");
       return -EIO;
     }
@@ -494,8 +494,8 @@ static int seal(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   }
 
   // set new epoch value in omap
-  bufferlist epochbl;
-  ::encode(op.epoch, epochbl);
+  ceph::bufferlist epochbl;
+  //::encode(op.epoch, epochbl);
   ret = cls_cxx_map_set_val(hctx, ZLOG_EPOCH_KEY, &epochbl);
   if (ret < 0) {
     CLS_LOG(0, "ERROR: seal(): failed to update epoch");
@@ -505,14 +505,14 @@ static int seal(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
   return CLS_ZLOG_OK;
 }
 
-static int max_position(cls_method_context_t hctx, bufferlist *in,
-    bufferlist *out)
+static int max_position(cls_method_context_t hctx, ceph::bufferlist *in,
+    ceph::bufferlist *out)
 {
   cls_zlog_max_position_op op;
   try {
-    bufferlist::iterator it = in->begin();
-    ::decode(op, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = in->begin();
+    //::decode(op, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: max_position(): failed to decode input");
     return -EINVAL;
   }
@@ -531,23 +531,23 @@ static int max_position(cls_method_context_t hctx, bufferlist *in,
   cls_zlog_max_position_ret reply;
   reply.position = position;
 
-  ::encode(reply, *out);
+  //::encode(reply, *out);
 
   return CLS_ZLOG_OK;
 }
 
 static int __get_projection(cls_method_context_t hctx, uint64_t *pepoch)
 {
-  bufferlist bl;
+  ceph::bufferlist bl;
   int ret = cls_cxx_map_get_val(hctx, ZLOG_PROJECTION_KEY, &bl);
   if (ret < 0)
     return ret;
 
   uint64_t epoch;
   try {
-    bufferlist::iterator it = bl.begin();
-    ::decode(epoch, it);
-  } catch (buffer::error& err) {
+    ceph::bufferlist::iterator it = bl.begin();
+    //::decode(epoch, it);
+  } catch (ceph::buffer::error& err) {
     CLS_LOG(0, "ERROR: set_projection(): failed to decode projection");
     return -EIO;
   }
@@ -559,8 +559,8 @@ static int __get_projection(cls_method_context_t hctx, uint64_t *pepoch)
 
 static int __set_projection(cls_method_context_t hctx, uint64_t epoch)
 {
-  bufferlist bl;
-  ::encode(epoch, bl);
+  ceph::bufferlist bl;
+  //::encode(epoch, bl);
 
   int ret = cls_cxx_map_set_val(hctx, ZLOG_PROJECTION_KEY, &bl);
   if (ret < 0) {
@@ -571,7 +571,7 @@ static int __set_projection(cls_method_context_t hctx, uint64_t epoch)
   return 0;
 }
 
-static int set_projection(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+static int set_projection(cls_method_context_t hctx, ceph::bufferlist *in, ceph::bufferlist *out)
 {
   uint64_t epoch;
   int ret = __get_projection(hctx, &epoch);
@@ -594,7 +594,7 @@ static int set_projection(cls_method_context_t hctx, bufferlist *in, bufferlist 
   return 0;
 }
 
-static int get_projection(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
+static int get_projection(cls_method_context_t hctx, ceph::bufferlist *in, ceph::bufferlist *out)
 {
   uint64_t epoch;
   int ret = __get_projection(hctx, &epoch);
@@ -604,7 +604,7 @@ static int get_projection(cls_method_context_t hctx, bufferlist *in, bufferlist 
 
   cls_zlog_get_projection_ret reply;
   reply.epoch = epoch;
-  ::encode(reply, *out);
+  //::encode(reply, *out);
 
   return 0;
 }
