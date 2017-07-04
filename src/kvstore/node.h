@@ -7,6 +7,7 @@
 #include <vector>
 #include <mutex>
 #include <zlog/slice.h>
+#include "kvstore.pb.h"
 
 class Node;
 using SharedNodeRef = std::shared_ptr<Node>;
@@ -252,6 +253,12 @@ class Node {
 
   size_t ByteSize() {
     return sizeof(*this) + key_.size() + val_.size();
+  }
+
+  void Serialize(kvstore_proto::Node& dst) {
+    dst.set_red(red_);
+    dst.set_key(key_);
+    dst.set_val(val_);
   }
 
  private:

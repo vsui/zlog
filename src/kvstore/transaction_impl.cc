@@ -33,9 +33,7 @@ void TransactionImpl::serialize_node_ptr(kvstore_proto::NodePtr *dst,
 void TransactionImpl::serialize_node(kvstore_proto::Node *dst,
     SharedNodeRef node, int maybe_left_offset, int maybe_right_offset)
 {
-  dst->set_red(node->red());
-  dst->set_key(node->key().ToString());
-  dst->set_val(node->val().ToString());
+  node->Serialize(*dst);
 
   serialize_node_ptr(dst->mutable_left(), node->left, maybe_left_offset);
   serialize_node_ptr(dst->mutable_right(), node->right, maybe_right_offset);
