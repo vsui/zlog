@@ -82,7 +82,7 @@ int DBImpl::RestoreFromLog()
   return 0;
 }
 
-std::ostream& operator<<(std::ostream& out, const SharedNodeRef& n)
+std::ostream& operator<<(std::ostream& out, SharedNodeRef& n)
 {
   out << "node(" << n.get() << "):" << n->key().ToString() << ": ";
   out << (n->red() ? "red " : "blk ");
@@ -256,7 +256,7 @@ void DBImpl::print_path(std::ostream& out, std::deque<SharedNodeRef>& path)
 /*
  *
  */
-int DBImpl::_validate_rb_tree(const SharedNodeRef root)
+int DBImpl::_validate_rb_tree(SharedNodeRef root)
 {
   assert(root != nullptr);
 

@@ -21,7 +21,7 @@
 #include "zlog/db.h"
 #include "zlog/log.h"
 
-std::ostream& operator<<(std::ostream& out, const SharedNodeRef& n);
+std::ostream& operator<<(std::ostream& out, SharedNodeRef& n);
 std::ostream& operator<<(std::ostream& out, const kvstore_proto::NodePtr& p);
 std::ostream& operator<<(std::ostream& out, const kvstore_proto::Node& n);
 std::ostream& operator<<(std::ostream& out, const kvstore_proto::Intention& i);
@@ -72,7 +72,7 @@ class DBImpl : public DB {
   void write_dot_history(std::ostream& out,
       std::vector<Snapshot*>& snapshots) override;
   void validate() override {
-    const auto snapshot = root_;
+    auto snapshot = root_;
     validate_rb_tree(snapshot);
   }
 

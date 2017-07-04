@@ -5,11 +5,11 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <mutex>
 #include <zlog/slice.h>
 
 class Node;
 using SharedNodeRef = std::shared_ptr<Node>;
-using WeakNodeRef = std::weak_ptr<Node>;
 
 class DBImpl;
 
@@ -36,20 +36,35 @@ class DBImpl;
 class NodePtr {
  public:
 
-  NodePtr(const NodePtr& other) {
-    ref_ = other.ref_;
+  NodePtr(NodePtr&& other) {
     offset_ = other.offset_;
     csn_ = other.csn_;
     read_only_ = true;
     db_ = other.db_;
+
+    std::lock_guard<std::mutex> lk(other.lock_);
+    ref_ = other.ref_;
   }
 
-  NodePtr& operator=(const NodePtr& other) {
-    assert(!read_only());
+  NodePtr(NodePtr& other) {
+    offset_ = other.offset_;
+    csn_ = other.csn_;
+    read_only_ = true;
+    db_ = other.db_;
+
+    std::lock_guard<std::mutex> lk(other.lock_);
     ref_ = other.ref_;
+  }
+
+  NodePtr& operator=(NodePtr& other) {
+    assert(!read_only());
     offset_ = other.offset_;
     csn_ = other.csn_;
     db_ = other.db_;
+
+    std::lock_guard<std::mutex> lk(other.lock_);
+    ref_ = other.ref_;
+
     return *this;
   }
 
@@ -61,12 +76,14 @@ class NodePtr {
     ref_(ref), csn_(-1), offset_(-1), db_(db), read_only_(read_only)
   {}
 
-  void replace(const NodePtr& other) {
-    ref_ = other.ref_;
+  void replace(NodePtr& other) {
     offset_ = other.offset_;
     csn_ = other.csn_;
     read_only_ = true;
     db_ = other.db_;
+
+    std::lock_guard<std::mutex> lk(other.lock_);
+    ref_ = other.ref_;
   }
 
   inline bool read_only() const {
@@ -80,13 +97,16 @@ class NodePtr {
 
   inline SharedNodeRef ref(std::vector<std::pair<int64_t, int>>& trace) {
     trace.emplace_back(csn_, offset_);
-    while (true) {
-      if (auto ret = ref_.lock()) {
-        return ret;
-      } else {
-        ref_ = fetch(trace);
-      }
-    }
+    std::unique_lock<std::mutex> lk(lock_);
+    if (ref_)
+      return ref_;
+    lk.unlock();
+    auto ptr = fetch(trace);
+    assert(ptr);
+    lk.lock();
+    if (!ref_)
+      ref_ = ptr;
+    return ref_;
   }
 
   // deference a node without providing a trace. this is used by the db that
@@ -100,6 +120,7 @@ class NodePtr {
 
   inline void set_ref(SharedNodeRef ref) {
     assert(!read_only());
+    std::lock_guard<std::mutex> lk(lock_);
     ref_ = ref;
   }
 
@@ -122,8 +143,9 @@ class NodePtr {
   }
 
  private:
-  // heap pointer (optional), and log address
-  WeakNodeRef ref_;
+  std::mutex lock_;
+  SharedNodeRef ref_;
+
   int64_t csn_;
   int offset_;
 

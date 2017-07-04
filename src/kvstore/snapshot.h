@@ -7,7 +7,7 @@
 
 class Snapshot {
  public:
-  Snapshot(DBImpl *db, const NodePtr root) :
+  Snapshot(DBImpl *db, NodePtr root) :
     db(db), root(root)
   {}
 
