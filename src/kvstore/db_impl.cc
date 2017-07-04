@@ -76,8 +76,7 @@ int DBImpl::RestoreFromLog()
   kvstore_proto::Intention i;
   assert(i.ParseFromString(data));
   assert(i.IsInitialized());
-  auto root = cache_.CacheIntention(i, tail);
-  root_.replace(root);
+  root_ = cache_.CacheIntention(i, tail);
 
   return 0;
 }
@@ -367,8 +366,7 @@ void DBImpl::TransactionFinisher()
     cur_txn_->SetDeltaPosition(delta, pos);
 
     // fold afterimage into node cache and update db root
-    auto root = cache_.ApplyAfterImageDelta(delta, pos);
-    root_.replace(root);
+    root_ = cache_.ApplyAfterImageDelta(delta, pos);
 
     // mark complete
     cur_txn_->MarkComplete();

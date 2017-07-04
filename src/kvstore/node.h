@@ -68,15 +68,7 @@ class NodePtr {
     return *this;
   }
 
-  // TODO: now we can copy nodeptr. implications?
-  //NodePtr(NodePtr&& other) = delete;
-  NodePtr& operator=(NodePtr&& other) & = delete;
-
-  NodePtr(SharedNodeRef ref, DBImpl *db, bool read_only) :
-    ref_(ref), csn_(-1), offset_(-1), db_(db), read_only_(read_only)
-  {}
-
-  void replace(NodePtr& other) {
+  NodePtr& operator=(NodePtr&& other) {
     offset_ = other.offset_;
     csn_ = other.csn_;
     read_only_ = true;
@@ -84,7 +76,13 @@ class NodePtr {
 
     std::lock_guard<std::mutex> lk(other.lock_);
     ref_ = other.ref_;
+
+    return *this;
   }
+
+  NodePtr(SharedNodeRef ref, DBImpl *db, bool read_only) :
+    ref_(ref), csn_(-1), offset_(-1), db_(db), read_only_(read_only)
+  {}
 
   inline bool read_only() const {
     return read_only_;
