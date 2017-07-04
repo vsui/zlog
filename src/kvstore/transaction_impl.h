@@ -107,18 +107,6 @@ class TransactionImpl : public Transaction {
   std::vector<std::pair<int64_t, int>> trace_;
   void UpdateLRU();
 
-  // keep new nodes alive for the duration of the transaction until we
-  // construct the intention. this is needed because NodePtr contains weak_ptr
-  // so new NodeRef nodes (see: insert_recursive) just disappear, and we can't
-  // let that happen because we don't store them in the the log or any other
-  // type of cache. future options:
-  //
-  //   1. use a SharedNodePtr type in transactions
-  //   2. probably better: integrate some sort of cache so that we can support
-  //   transactions that are really large
-  //
-  std::vector<SharedNodeRef> fresh_nodes_;
-
   static inline NodePtr& left(SharedNodeRef n) { return n->left; };
   static inline NodePtr& right(SharedNodeRef n) { return n->right; };
 

@@ -50,7 +50,6 @@ SharedNodeRef TransactionImpl::insert_recursive(std::deque<SharedNodeRef>& path,
     auto nn = std::make_shared<Node>(key, value, true, Node::Nil(),
         Node::Nil(), rid_, false, db_);
     path.push_back(nn);
-    fresh_nodes_.push_back(nn);
     return nn;
   }
 
@@ -83,7 +82,6 @@ SharedNodeRef TransactionImpl::insert_recursive(std::deque<SharedNodeRef>& path,
     copy = node;
   else {
     copy = Node::Copy(node, db_, rid_);
-    fresh_nodes_.push_back(copy);
   }
 
   if (less)
@@ -134,7 +132,6 @@ void TransactionImpl::insert_balance(SharedNodeRef& parent, SharedNodeRef& nn,
   if (uncle->red()) {
     if (uncle->rid() != rid_) {
       uncle = Node::Copy(uncle, db_, rid_);
-      fresh_nodes_.push_back(uncle);
       uncle_ptr.set_ref(uncle);
     }
     parent->set_red(false);
@@ -173,7 +170,6 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
       copy = node;
     else {
       copy = Node::Copy(node, db_, rid_);
-      fresh_nodes_.push_back(copy);
     }
     path.push_back(copy);
     return copy;
@@ -197,7 +193,6 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
     copy = node;
   else {
     copy = Node::Copy(node, db_, rid_);
-    fresh_nodes_.push_back(copy);
   }
 
   if (less)
@@ -230,7 +225,6 @@ SharedNodeRef TransactionImpl::build_min_path(SharedNodeRef node, std::deque<Sha
     assert(node->left.ref(trace_) != nullptr);
     if (node->left.ref(trace_)->rid() != rid_) {
       auto n = Node::Copy(node->left.ref(trace_), db_, rid_);
-      fresh_nodes_.push_back(n);
       node->left.set_ref(n);
     }
     path.push_front(node);
@@ -249,7 +243,6 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
   if (brother->red()) {
     if (brother->rid() != rid_) {
       auto n = Node::Copy(brother, db_, rid_);
-      fresh_nodes_.push_back(n);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
@@ -270,7 +263,6 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
   if (!brother->left.ref(trace_)->red() && !brother->right.ref(trace_)->red()) {
     if (brother->rid() != rid_) {
       auto n = Node::Copy(brother, db_, rid_);
-      fresh_nodes_.push_back(n);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
@@ -283,7 +275,6 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
     if (!child_b(brother).ref(trace_)->red()) {
       if (brother->rid() != rid_) {
         auto n = Node::Copy(brother, db_, rid_);
-        fresh_nodes_.push_back(n);
         child_b(parent).set_ref(n);
       } else
         child_b(parent).set_ref(brother);
@@ -291,7 +282,6 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
 
       if (child_a(brother).ref(trace_)->rid() != rid_) {
         auto n = Node::Copy(child_a(brother).ref(trace_), db_, rid_);
-        fresh_nodes_.push_back(n);
         child_a(brother).set_ref(n);
       }
       brother->swap_color(child_a(brother).ref(trace_));
@@ -300,7 +290,6 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
 
     if (brother->rid() != rid_) {
       auto n = Node::Copy(brother, db_, rid_);
-      fresh_nodes_.push_back(n);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
@@ -308,7 +297,6 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
 
     if (child_b(brother).ref(trace_)->rid() != rid_) {
       auto n = Node::Copy(child_b(brother).ref(trace_), db_, rid_);
-      fresh_nodes_.push_back(n);
       child_b(brother).set_ref(n);
     }
     brother->set_red(parent->red());
@@ -345,7 +333,6 @@ void TransactionImpl::balance_delete(SharedNodeRef extra_black,
     new_node = extra_black;
   else {
     new_node = Node::Copy(extra_black, db_, rid_);
-    fresh_nodes_.push_back(new_node);
   }
   transplant(parent, extra_black, new_node, root);
 
@@ -484,7 +471,6 @@ void TransactionImpl::Delete(const Slice& key)
     auto temp = removed;
     if (removed->right.ref(trace_)->rid() != rid_) {
       auto n = Node::Copy(removed->right.ref(trace_), db_, rid_);
-      fresh_nodes_.push_back(n);
       removed->right.set_ref(n);
     }
     removed = build_min_path(removed->right.ref(trace_), path);
