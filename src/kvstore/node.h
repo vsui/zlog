@@ -147,6 +147,8 @@ class NodePtr {
   int64_t csn_;
   int offset_;
 
+  // TODO: this should be made thread-local, or passed around. getting rid of
+  // this would save a lot of memory.
   DBImpl *db_;
 
   bool read_only_;

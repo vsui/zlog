@@ -127,15 +127,18 @@ void TransactionImpl::insert_balance(SharedNodeRef& parent, SharedNodeRef& nn,
     SharedNodeRef& root)
 {
   assert(path.front() != Node::Nil());
-  NodePtr& uncle = child_b(path.front());
-  if (uncle.ref(trace_)->red()) {
-    if (uncle.ref(trace_)->rid() != rid_) {
-      auto n = Node::Copy(uncle.ref(trace_), db_, rid_);
-      fresh_nodes_.push_back(n);
-      uncle.set_ref(n);
+
+  NodePtr& uncle_ptr = child_b(path.front());
+  auto uncle = uncle_ptr.ref(trace_);
+
+  if (uncle->red()) {
+    if (uncle->rid() != rid_) {
+      uncle = Node::Copy(uncle, db_, rid_);
+      fresh_nodes_.push_back(uncle);
+      uncle_ptr.set_ref(uncle);
     }
     parent->set_red(false);
-    uncle.ref(trace_)->set_red(false);
+    uncle->set_red(false);
     path.front()->set_red(true);
     nn = pop_front(path);
     parent = pop_front(path);
