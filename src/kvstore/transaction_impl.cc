@@ -219,17 +219,22 @@ void TransactionImpl::transplant(SharedNodeRef parent, SharedNodeRef removed,
 
 SharedNodeRef TransactionImpl::build_min_path(SharedNodeRef node, std::deque<SharedNodeRef>& path)
 {
-  assert(node != nullptr);
-  assert(node->left.ref(trace_) != nullptr);
-  while (node->left.ref(trace_) != Node::Nil()) {
-    assert(node->left.ref(trace_) != nullptr);
-    if (node->left.ref(trace_)->rid() != rid_) {
-      auto n = Node::Copy(node->left.ref(trace_), db_, rid_);
-      node->left.set_ref(n);
+  while (true) {
+    assert(node);
+
+    auto left_node = node->left.ref(trace_);
+    assert(left_node);
+
+    if (left_node == Node::Nil())
+      break;
+
+    if (left_node->rid() != rid_) {
+      left_node = Node::Copy(left_node, db_, rid_);
+      node->left.set_ref(left_node);
     }
+
     path.push_front(node);
-    node = node->left.ref(trace_);
-    assert(node != nullptr);
+    node = left_node;
   }
   return node;
 }
