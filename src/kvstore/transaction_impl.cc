@@ -62,8 +62,7 @@ SharedNodeRef TransactionImpl::insert_recursive(std::deque<SharedNodeRef>& path,
     return nn;
   }
 
-  int cmp = key.compare(Slice(node->key().data(),
-        node->key().size()));
+  int cmp = key.compare(node->key());
   bool less = cmp < 0;
   bool equal = cmp == 0;
 
@@ -168,8 +167,7 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
     return nullptr;
   }
 
-  int cmp = key.compare(Slice(node->key().data(),
-        node->key().size()));
+  int cmp = key.compare(node->key());
   bool less = cmp < 0;
   bool equal = cmp == 0;
 
@@ -552,8 +550,7 @@ int TransactionImpl::Get(const Slice& key, std::string* val)
 
   auto cur = root_ == nullptr ? src_root_.ref(trace_) : root_;
   while (cur != Node::Nil()) {
-    int cmp = key.compare(Slice(cur->key().data(),
-          cur->key().size()));
+    int cmp = key.compare(cur->key());
     if (cmp == 0) {
       val->assign(cur->val().data(), cur->val().size());
       return 0;
