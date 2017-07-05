@@ -90,7 +90,7 @@ SharedNodeRef TransactionImpl::insert_recursive(std::deque<SharedNodeRef>& path,
   if (node->rid() == rid_)
     copy = node;
   else {
-    copy = Node::Copy(node, rid_);
+    copy = node->Copy(rid_);
   }
 
   if (less)
@@ -140,7 +140,7 @@ void TransactionImpl::insert_balance(SharedNodeRef& parent, SharedNodeRef& nn,
 
   if (uncle->red()) {
     if (uncle->rid() != rid_) {
-      uncle = Node::Copy(uncle, rid_);
+      uncle = uncle->Copy(rid_);
       uncle_ptr.set_ref(uncle);
     }
     parent->set_red(false);
@@ -178,7 +178,7 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
     if (node->rid() == rid_)
       copy = node;
     else {
-      copy = Node::Copy(node, rid_);
+      copy = node->Copy(rid_);
     }
     path.push_back(copy);
     return copy;
@@ -201,7 +201,7 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
   if (node->rid() == rid_)
     copy = node;
   else {
-    copy = Node::Copy(node, rid_);
+    copy = node->Copy(rid_);
   }
 
   if (less)
@@ -238,7 +238,7 @@ SharedNodeRef TransactionImpl::build_min_path(SharedNodeRef node, std::deque<Sha
       break;
 
     if (left_node->rid() != rid_) {
-      left_node = Node::Copy(left_node, rid_);
+      left_node = left_node->Copy(rid_);
       node->left.set_ref(left_node);
     }
 
@@ -256,7 +256,7 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
 
   if (brother->red()) {
     if (brother->rid() != rid_) {
-      auto n = Node::Copy(brother, rid_);
+      auto n = brother->Copy(rid_);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
@@ -276,7 +276,7 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
 
   if (!brother->left.ref(trace_)->red() && !brother->right.ref(trace_)->red()) {
     if (brother->rid() != rid_) {
-      auto n = Node::Copy(brother, rid_);
+      auto n = brother->Copy(rid_);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
@@ -288,14 +288,14 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
   } else {
     if (!child_b(brother).ref(trace_)->red()) {
       if (brother->rid() != rid_) {
-        auto n = Node::Copy(brother, rid_);
+        auto n = brother->Copy(rid_);
         child_b(parent).set_ref(n);
       } else
         child_b(parent).set_ref(brother);
       brother = child_b(parent).ref(trace_);
 
       if (child_a(brother).ref(trace_)->rid() != rid_) {
-        auto n = Node::Copy(child_a(brother).ref(trace_), rid_);
+        auto n = child_a(brother).ref(trace_)->Copy(rid_);
         child_a(brother).set_ref(n);
       }
       brother->swap_color(child_a(brother).ref(trace_));
@@ -303,14 +303,14 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
     }
 
     if (brother->rid() != rid_) {
-      auto n = Node::Copy(brother, rid_);
+      auto n = brother->Copy(rid_);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
     brother = child_b(parent).ref(trace_);
 
     if (child_b(brother).ref(trace_)->rid() != rid_) {
-      auto n = Node::Copy(child_b(brother).ref(trace_), rid_);
+      auto n = child_b(brother).ref(trace_)->Copy(rid_);
       child_b(brother).set_ref(n);
     }
     brother->set_red(parent->red());
@@ -346,7 +346,7 @@ void TransactionImpl::balance_delete(SharedNodeRef extra_black,
   if (extra_black->rid() == rid_)
     new_node = extra_black;
   else {
-    new_node = Node::Copy(extra_black, rid_);
+    new_node = extra_black->Copy(rid_);
   }
   transplant(parent, extra_black, new_node, root);
 
@@ -488,7 +488,7 @@ void TransactionImpl::Delete(const Slice& key)
     assert(transplanted != nullptr);
     auto temp = removed;
     if (removed->right.ref(trace_)->rid() != rid_) {
-      auto n = Node::Copy(removed->right.ref(trace_), rid_);
+      auto n = removed->right.ref(trace_)->Copy(rid_);
       removed->right.set_ref(n);
     }
     removed = build_min_path(removed->right.ref(trace_), path);

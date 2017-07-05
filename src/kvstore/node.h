@@ -171,20 +171,21 @@ class Node {
     return node;
   }
 
-  static SharedNodeRef Copy(SharedNodeRef src, uint64_t rid) {
-    if (src == Nil())
+  SharedNodeRef Copy(uint64_t new_rid) {
+    if (this == Nil().get())
       return Nil();
 
     // TODO: we don't need to use the version of ref() that resolves here
     // because the caller will likely only traverse down one side.
-    auto node = std::make_shared<Node>(src->key(), src->val(), src->red(),
-        src->left.ref_notrace(), src->right.ref_notrace(), rid, false);
+    auto node = std::make_shared<Node>(key_, val_, red_,
+        left.ref_notrace(), right.ref_notrace(),
+        new_rid, false);
 
-    node->left.set_csn(src->left.csn());
-    node->left.set_offset(src->left.offset());
+    node->left.set_csn(left.csn());
+    node->left.set_offset(left.offset());
 
-    node->right.set_csn(src->right.csn());
-    node->right.set_offset(src->right.offset());
+    node->right.set_csn(right.csn());
+    node->right.set_offset(right.offset());
 
     return node;
   }
