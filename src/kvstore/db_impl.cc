@@ -1,12 +1,14 @@
 #include "db_impl.h"
 #include <sstream>
 
+thread_local DBImpl *curr_db = nullptr;
+
 DBImpl::DBImpl(zlog::Log *log) :
   log_(log),
   cache_(this),
   stop_(false),
   root_id_(-1),
-  root_(Node::Nil(), this, true),
+  root_(Node::Nil(), true),
   cur_txn_(nullptr),
   txn_finisher_(std::thread(&DBImpl::TransactionFinisher, this))
 {

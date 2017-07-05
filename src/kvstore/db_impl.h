@@ -123,4 +123,6 @@ class DBImpl : public DB {
   std::thread txn_finisher_;
 };
 
+extern thread_local DBImpl *curr_db;
+
 #endif

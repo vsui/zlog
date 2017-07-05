@@ -2,6 +2,17 @@
 #include <sstream>
 #include "db_impl.h"
 
+class CurrentDBGuard {
+ public:
+  explicit CurrentDBGuard(DBImpl *db) {
+    curr_db = db;
+  }
+
+  ~CurrentDBGuard() {
+    curr_db = nullptr;
+  }
+};
+
 void TransactionImpl::UpdateLRU()
 {
   db_->UpdateLRU(trace_);
@@ -46,7 +57,7 @@ SharedNodeRef TransactionImpl::insert_recursive(std::deque<SharedNodeRef>& path,
 
   if (node == Node::Nil()) {
     auto nn = std::make_shared<Node>(key, value, true, Node::Nil(),
-        Node::Nil(), rid_, false, db_);
+        Node::Nil(), rid_, false);
     path.push_back(nn);
     return nn;
   }
@@ -79,7 +90,7 @@ SharedNodeRef TransactionImpl::insert_recursive(std::deque<SharedNodeRef>& path,
   if (node->rid() == rid_)
     copy = node;
   else {
-    copy = Node::Copy(node, db_, rid_);
+    copy = Node::Copy(node, rid_);
   }
 
   if (less)
@@ -129,7 +140,7 @@ void TransactionImpl::insert_balance(SharedNodeRef& parent, SharedNodeRef& nn,
 
   if (uncle->red()) {
     if (uncle->rid() != rid_) {
-      uncle = Node::Copy(uncle, db_, rid_);
+      uncle = Node::Copy(uncle, rid_);
       uncle_ptr.set_ref(uncle);
     }
     parent->set_red(false);
@@ -167,7 +178,7 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
     if (node->rid() == rid_)
       copy = node;
     else {
-      copy = Node::Copy(node, db_, rid_);
+      copy = Node::Copy(node, rid_);
     }
     path.push_back(copy);
     return copy;
@@ -190,7 +201,7 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
   if (node->rid() == rid_)
     copy = node;
   else {
-    copy = Node::Copy(node, db_, rid_);
+    copy = Node::Copy(node, rid_);
   }
 
   if (less)
@@ -227,7 +238,7 @@ SharedNodeRef TransactionImpl::build_min_path(SharedNodeRef node, std::deque<Sha
       break;
 
     if (left_node->rid() != rid_) {
-      left_node = Node::Copy(left_node, db_, rid_);
+      left_node = Node::Copy(left_node, rid_);
       node->left.set_ref(left_node);
     }
 
@@ -245,7 +256,7 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
 
   if (brother->red()) {
     if (brother->rid() != rid_) {
-      auto n = Node::Copy(brother, db_, rid_);
+      auto n = Node::Copy(brother, rid_);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
@@ -265,7 +276,7 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
 
   if (!brother->left.ref(trace_)->red() && !brother->right.ref(trace_)->red()) {
     if (brother->rid() != rid_) {
-      auto n = Node::Copy(brother, db_, rid_);
+      auto n = Node::Copy(brother, rid_);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
@@ -277,14 +288,14 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
   } else {
     if (!child_b(brother).ref(trace_)->red()) {
       if (brother->rid() != rid_) {
-        auto n = Node::Copy(brother, db_, rid_);
+        auto n = Node::Copy(brother, rid_);
         child_b(parent).set_ref(n);
       } else
         child_b(parent).set_ref(brother);
       brother = child_b(parent).ref(trace_);
 
       if (child_a(brother).ref(trace_)->rid() != rid_) {
-        auto n = Node::Copy(child_a(brother).ref(trace_), db_, rid_);
+        auto n = Node::Copy(child_a(brother).ref(trace_), rid_);
         child_a(brother).set_ref(n);
       }
       brother->swap_color(child_a(brother).ref(trace_));
@@ -292,14 +303,14 @@ void TransactionImpl::mirror_remove_balance(SharedNodeRef& extra_black, SharedNo
     }
 
     if (brother->rid() != rid_) {
-      auto n = Node::Copy(brother, db_, rid_);
+      auto n = Node::Copy(brother, rid_);
       child_b(parent).set_ref(n);
     } else
       child_b(parent).set_ref(brother);
     brother = child_b(parent).ref(trace_);
 
     if (child_b(brother).ref(trace_)->rid() != rid_) {
-      auto n = Node::Copy(child_b(brother).ref(trace_), db_, rid_);
+      auto n = Node::Copy(child_b(brother).ref(trace_), rid_);
       child_b(brother).set_ref(n);
     }
     brother->set_red(parent->red());
@@ -335,7 +346,7 @@ void TransactionImpl::balance_delete(SharedNodeRef extra_black,
   if (extra_black->rid() == rid_)
     new_node = extra_black;
   else {
-    new_node = Node::Copy(extra_black, db_, rid_);
+    new_node = Node::Copy(extra_black, rid_);
   }
   transplant(parent, extra_black, new_node, root);
 
@@ -380,6 +391,8 @@ void TransactionImpl::serialize_intention(kvstore_proto::Intention& i,
 
 void TransactionImpl::Put(const Slice& key, const Slice& value)
 {
+  CurrentDBGuard cdg(db_);
+
   assert(!committed_);
   assert(!aborted_);
 
@@ -432,6 +445,8 @@ void TransactionImpl::Put(const Slice& key, const Slice& value)
 
 void TransactionImpl::Delete(const Slice& key)
 {
+  CurrentDBGuard cdg(db_);
+
   assert(!committed_);
   assert(!aborted_);
 
@@ -473,7 +488,7 @@ void TransactionImpl::Delete(const Slice& key)
     assert(transplanted != nullptr);
     auto temp = removed;
     if (removed->right.ref(trace_)->rid() != rid_) {
-      auto n = Node::Copy(removed->right.ref(trace_), db_, rid_);
+      auto n = Node::Copy(removed->right.ref(trace_), rid_);
       removed->right.set_ref(n);
     }
     removed = build_min_path(removed->right.ref(trace_), path);
@@ -497,6 +512,8 @@ void TransactionImpl::Delete(const Slice& key)
 
 void TransactionImpl::Abort()
 {
+  CurrentDBGuard cdg(db_);
+
   assert(!committed_);
   assert(!aborted_);
   aborted_ = true;
@@ -505,6 +522,8 @@ void TransactionImpl::Abort()
 
 void TransactionImpl::Commit()
 {
+  CurrentDBGuard cdg(db_);
+
   assert(!committed_);
   assert(!aborted_);
 
@@ -524,6 +543,8 @@ void TransactionImpl::Commit()
 
 int TransactionImpl::Get(const Slice& key, std::string* val)
 {
+  CurrentDBGuard cdg(db_);
+
   assert(!committed_);
   assert(!aborted_);
 

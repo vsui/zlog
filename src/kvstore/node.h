@@ -41,7 +41,6 @@ class NodePtr {
     offset_ = other.offset_;
     csn_ = other.csn_;
     read_only_ = true;
-    db_ = other.db_;
 
     std::lock_guard<std::mutex> lk(other.lock_);
     ref_ = other.ref_;
@@ -51,7 +50,6 @@ class NodePtr {
     offset_ = other.offset_;
     csn_ = other.csn_;
     read_only_ = true;
-    db_ = other.db_;
 
     std::lock_guard<std::mutex> lk(other.lock_);
     ref_ = other.ref_;
@@ -61,7 +59,6 @@ class NodePtr {
     assert(!read_only());
     offset_ = other.offset_;
     csn_ = other.csn_;
-    db_ = other.db_;
 
     std::lock_guard<std::mutex> lk(other.lock_);
     ref_ = other.ref_;
@@ -73,7 +70,6 @@ class NodePtr {
     offset_ = other.offset_;
     csn_ = other.csn_;
     read_only_ = true;
-    db_ = other.db_;
 
     std::lock_guard<std::mutex> lk(other.lock_);
     ref_ = other.ref_;
@@ -81,8 +77,8 @@ class NodePtr {
     return *this;
   }
 
-  NodePtr(SharedNodeRef ref, DBImpl *db, bool read_only) :
-    ref_(ref), csn_(-1), offset_(-1), db_(db), read_only_(read_only)
+  NodePtr(SharedNodeRef ref, bool read_only) :
+    ref_(ref), csn_(-1), offset_(-1), read_only_(read_only)
   {}
 
   inline bool read_only() const {
@@ -148,10 +144,6 @@ class NodePtr {
   int64_t csn_;
   int offset_;
 
-  // TODO: this should be made thread-local, or passed around. getting rid of
-  // this would save a lot of memory.
-  DBImpl *db_;
-
   bool read_only_;
 
   SharedNodeRef fetch(std::vector<std::pair<int64_t, int>>& trace);
@@ -167,26 +159,26 @@ class Node {
 
   // TODO: allow rid to have negative initialization value
   Node(const Slice& key, const Slice& val, bool red, SharedNodeRef lr, SharedNodeRef rr,
-      uint64_t rid, bool read_only, DBImpl *db) :
-    left(lr, db, read_only), right(rr, db, read_only),
+      uint64_t rid, bool read_only) :
+    left(lr, read_only), right(rr, read_only),
     key_(key.data(), key.size()), val_(val.data(), val.size()),
     red_(red), rid_(rid), read_only_(read_only)
   {}
 
   static SharedNodeRef& Nil() {
     static SharedNodeRef node = std::make_shared<Node>("", "",
-        false, nullptr, nullptr, (uint64_t)-1, true, nullptr);
+        false, nullptr, nullptr, (uint64_t)-1, true);
     return node;
   }
 
-  static SharedNodeRef Copy(SharedNodeRef src, DBImpl *db, uint64_t rid) {
+  static SharedNodeRef Copy(SharedNodeRef src, uint64_t rid) {
     if (src == Nil())
       return Nil();
 
     // TODO: we don't need to use the version of ref() that resolves here
     // because the caller will likely only traverse down one side.
     auto node = std::make_shared<Node>(src->key(), src->val(), src->red(),
-        src->left.ref_notrace(), src->right.ref_notrace(), rid, false, db);
+        src->left.ref_notrace(), src->right.ref_notrace(), rid, false);
 
     node->left.set_csn(src->left.csn());
     node->left.set_offset(src->left.offset());

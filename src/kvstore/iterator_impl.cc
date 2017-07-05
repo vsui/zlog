@@ -1,6 +1,17 @@
 #include "iterator_impl.h"
 #include "db_impl.h"
 
+class CurrentDBGuard {
+ public:
+  explicit CurrentDBGuard(DBImpl *db) {
+    curr_db = db;
+  }
+
+  ~CurrentDBGuard() {
+    curr_db = nullptr;
+  }
+};
+
 class IteratorTraceApplier {
  public:
   explicit IteratorTraceApplier(DBImpl *db) :
@@ -29,6 +40,7 @@ bool IteratorImpl::Valid() const
 
 void IteratorImpl::SeekToFirst()
 {
+  CurrentDBGuard cdg(snapshot_->db);
   IteratorTraceApplier ta(snapshot_->db);
 
   // clear stack
@@ -47,6 +59,7 @@ void IteratorImpl::SeekToFirst()
 
 void IteratorImpl::SeekToLast()
 {
+  CurrentDBGuard cdg(snapshot_->db);
   IteratorTraceApplier ta(snapshot_->db);
 
   // clear stack
@@ -65,6 +78,7 @@ void IteratorImpl::SeekToLast()
 
 void IteratorImpl::Seek(const Slice& key)
 {
+  CurrentDBGuard cdg(snapshot_->db);
   IteratorTraceApplier ta(snapshot_->db);
 
   // clear stack
@@ -94,6 +108,7 @@ void IteratorImpl::Seek(const Slice& key)
 
 void IteratorImpl::SeekForward(const Slice& key)
 {
+  CurrentDBGuard cdg(snapshot_->db);
   IteratorTraceApplier ta(snapshot_->db);
 
   // clear stack
@@ -123,6 +138,7 @@ void IteratorImpl::SeekForward(const Slice& key)
 
 void IteratorImpl::SeekPrevious(const Slice& key)
 {
+  CurrentDBGuard cdg(snapshot_->db);
   IteratorTraceApplier ta(snapshot_->db);
 
   // clear stack
@@ -153,6 +169,7 @@ void IteratorImpl::SeekPrevious(const Slice& key)
 
 void IteratorImpl::Next()
 {
+  CurrentDBGuard cdg(snapshot_->db);
   IteratorTraceApplier ta(snapshot_->db);
 
   assert(Valid());
@@ -171,6 +188,7 @@ void IteratorImpl::Next()
 
 void IteratorImpl::Prev()
 {
+  CurrentDBGuard cdg(snapshot_->db);
   IteratorTraceApplier ta(snapshot_->db);
 
   assert(Valid());
