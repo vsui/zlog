@@ -36,6 +36,9 @@ class DBImpl;
  */
 class NodePtr {
  public:
+  NodePtr(SharedNodeRef ref, bool read_only) :
+    ref_(ref), csn_(-1), offset_(-1), read_only_(read_only)
+  {}
 
   NodePtr(NodePtr&& other) {
     offset_ = other.offset_;
@@ -46,7 +49,7 @@ class NodePtr {
     ref_ = other.ref_;
   }
 
-  NodePtr(NodePtr& other) {
+  NodePtr(const NodePtr& other) {
     offset_ = other.offset_;
     csn_ = other.csn_;
     read_only_ = true;
@@ -55,7 +58,7 @@ class NodePtr {
     ref_ = other.ref_;
   }
 
-  NodePtr& operator=(NodePtr& other) {
+  NodePtr& operator=(const NodePtr& other) {
     assert(!read_only());
     offset_ = other.offset_;
     csn_ = other.csn_;
@@ -76,10 +79,6 @@ class NodePtr {
 
     return *this;
   }
-
-  NodePtr(SharedNodeRef ref, bool read_only) :
-    ref_(ref), csn_(-1), offset_(-1), read_only_(read_only)
-  {}
 
   inline bool read_only() const {
     return read_only_;
@@ -138,7 +137,7 @@ class NodePtr {
   }
 
  private:
-  std::mutex lock_;
+  mutable std::mutex lock_;
   SharedNodeRef ref_;
 
   int64_t csn_;
