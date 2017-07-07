@@ -7,7 +7,7 @@
 #include <vector>
 #include <mutex>
 #include <zlog/slice.h>
-#include "kvstore.pb.h"
+#include "kvstore/kvstore.pb.h"
 
 class Node;
 using SharedNodeRef = std::shared_ptr<Node>;
