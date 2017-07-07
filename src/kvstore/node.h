@@ -153,9 +153,6 @@ class NodePtr {
  */
 class Node {
  public:
-  NodePtr left;
-  NodePtr right;
-
   // TODO: allow rid to have negative initialization value
   Node(const Slice& key, const Slice& val, bool red, SharedNodeRef lr, SharedNodeRef rr,
       uint64_t rid, bool read_only) :
@@ -164,8 +161,14 @@ class Node {
     red_(red), rid_(rid), read_only_(read_only)
   {}
 
-  static SharedNodeRef& Nil() {
-    static SharedNodeRef node = std::make_shared<Node>("", "",
+  Node(const NodePtr& other) = delete;
+  Node(NodePtr&& other) = delete;
+  Node& operator=(const Node& other) = delete;
+  Node& operator=(Node&& other) = delete;
+  ~Node() = default;
+
+  inline static const SharedNodeRef& Nil() {
+    static const SharedNodeRef node = std::make_shared<Node>("", "",
         false, nullptr, nullptr, (uint64_t)-1, true);
     return node;
   }
@@ -252,6 +255,10 @@ class Node {
     dst.set_key(key_);
     dst.set_val(val_);
   }
+
+ public:
+  NodePtr left;
+  NodePtr right;
 
  private:
   std::string key_;
