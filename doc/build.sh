@@ -2,6 +2,7 @@
 # adapted from https://github.com/ceph/ceph/blob/master/admin/build-doc
 
 set -e
+set -x
 
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZLOG_DIR=${THIS_DIR}/../
