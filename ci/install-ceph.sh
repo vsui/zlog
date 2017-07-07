@@ -40,7 +40,7 @@ case $ID in
 $SUDO cat <<EOF > /etc/yum.repos.d/ceph.conf
 [ceph]
 name=Ceph packages for $basearch
-baseurl=https://download.ceph.com/rpm-kraken/el7/$basearch
+baseurl=https://download.ceph.com/rpm-luminous/el7/$basearch
 enabled=1
 priority=2
 gpgcheck=1
@@ -48,7 +48,7 @@ gpgkey=https://download.ceph.com/keys/release.asc
 
 [ceph-noarch]
 name=Ceph noarch packages
-baseurl=https://download.ceph.com/rpm-kraken/el7/noarch
+baseurl=https://download.ceph.com/rpm-luminous/el7/noarch
 enabled=1
 priority=2
 gpgcheck=1
@@ -56,7 +56,7 @@ gpgkey=https://download.ceph.com/keys/release.asc
 
 [ceph-source]
 name=Ceph source packages
-baseurl=https://download.ceph.com/rpm-kraken/el7/SRPMS
+baseurl=https://download.ceph.com/rpm-luminous/el7/SRPMS
 enabled=0
 priority=2
 gpgcheck=1
