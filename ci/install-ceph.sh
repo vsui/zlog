@@ -20,7 +20,7 @@ case $ID in
       apt-get install -y wget curl lsb-release \
       software-properties-common apt-transport-https
 
-    ceph_ver=kraken
+    ceph_ver=luminous
     ceph_deb_release=$(lsb_release -sc)
     ceph_http_code=$(curl -o /dev/null --silent --head --write-out '%{http_code}' \
       http://download.ceph.com/debian-${ceph_ver}/dists/${ceph_deb_release}/)
