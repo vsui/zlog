@@ -6,6 +6,7 @@ set -e
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   brew install boost protobuf cmake lmdb || true
+  sudo pip install virtualenv
   exit 0
 fi
 
