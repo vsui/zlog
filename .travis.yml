@@ -48,6 +48,7 @@ matrix:
     - os: linux
       env: DOCKER_IMAGE=ubuntu:xenial RUN_COVERAGE=1
     - os: osx
+      osx_image: xcode8 # for c++11 thread_local
 
 # the coverity build runs in the standard travis environment (job config #1
 # from the build matrix) and needs to have the proper dependencies installed.
