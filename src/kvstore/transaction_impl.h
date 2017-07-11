@@ -124,14 +124,14 @@ class TransactionImpl : public Transaction {
       std::deque<SharedNodeRef>& path, ChildA, ChildB, SharedNodeRef& root);
 
   template <typename ChildA, typename ChildB >
-  SharedNodeRef rotate(SharedNodeRef parent, SharedNodeRef child,
+  SharedNodeRef rotate(const SharedNodeRef& parent, const SharedNodeRef& child,
       ChildA child_a, ChildB child_b, SharedNodeRef& root);
 
   SharedNodeRef delete_recursive(std::deque<SharedNodeRef>& path,
       const Slice& key, const SharedNodeRef& node);
 
-  void transplant(SharedNodeRef parent, SharedNodeRef removed,
-      SharedNodeRef transplanted, SharedNodeRef& root);
+  void transplant(const SharedNodeRef& parent, const SharedNodeRef& removed,
+      const SharedNodeRef& transplanted, SharedNodeRef& root);
 
   SharedNodeRef build_min_path(SharedNodeRef node, std::deque<SharedNodeRef>& path);
 

@@ -103,8 +103,8 @@ SharedNodeRef TransactionImpl::insert_recursive(std::deque<SharedNodeRef>& path,
 }
 
 template<typename ChildA, typename ChildB >
-SharedNodeRef TransactionImpl::rotate(SharedNodeRef parent,
-    SharedNodeRef child, ChildA child_a, ChildB child_b, SharedNodeRef& root)
+SharedNodeRef TransactionImpl::rotate(const SharedNodeRef& parent,
+    const SharedNodeRef& child, ChildA child_a, ChildB child_b, SharedNodeRef& root)
 {
   // copy over ref and csn/off because we might be moving a pointer that
   // points outside of the current intentino.
@@ -212,8 +212,9 @@ SharedNodeRef TransactionImpl::delete_recursive(std::deque<SharedNodeRef>& path,
   return copy;
 }
 
-void TransactionImpl::transplant(SharedNodeRef parent, SharedNodeRef removed,
-    SharedNodeRef transplanted, SharedNodeRef& root)
+void TransactionImpl::transplant(const SharedNodeRef& parent,
+    const SharedNodeRef& removed, const SharedNodeRef& transplanted,
+    SharedNodeRef& root)
 {
   if (parent == Node::Nil()) {
     root = transplanted;
@@ -224,7 +225,8 @@ void TransactionImpl::transplant(SharedNodeRef parent, SharedNodeRef removed,
   }
 }
 
-SharedNodeRef TransactionImpl::build_min_path(SharedNodeRef node, std::deque<SharedNodeRef>& path)
+SharedNodeRef TransactionImpl::build_min_path(
+    SharedNodeRef node, std::deque<SharedNodeRef>& path)
 {
   while (true) {
     assert(node);
