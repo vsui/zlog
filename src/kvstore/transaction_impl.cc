@@ -242,8 +242,8 @@ SharedNodeRef TransactionImpl::build_min_path(
       node->left.set_ref(left_node);
     }
 
-    path.push_front(node);
-    node = left_node;
+    path.emplace_front(std::move(node));
+    node = std::move(left_node);
   }
   return node;
 }
