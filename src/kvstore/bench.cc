@@ -1,4 +1,7 @@
 #include <sstream>
+#include <thread>
+#include <vector>
+#include <unistd.h>
 #include <iostream>
 #include <iomanip>
 #include <map>
@@ -40,7 +43,6 @@ static inline std::string tostr(int value)
 
 int main(int argc, char **argv)
 {
-  int stop_after = 0;
   char *db_path;
 
   if (argc < 2) {
@@ -49,54 +51,56 @@ int main(int argc, char **argv)
   }
 
   db_path = argv[1];
+  int nthreads = atoi(argv[2]);
 
-  if (argc > 2) {
-    stop_after = atoi(argv[2]);
-  }
-
+  // setup
   auto client = new FakeSeqrClient();
   auto be = new LMDBBackend("fakepool");
   be->Init(db_path, false);
-
   zlog::Log *log;
   int ret = zlog::Log::OpenOrCreate(be, "log", client, &log);
   assert(ret == 0);
-
   client->Init(log, "fakepool", "log");
-
   DB *db;
   ret = DB::Open(log, true, &db);
   assert(ret == 0);
 
+  // fill db
+  int counter = 0;
   std::srand(0);
-
-  uint64_t txn_count = 0;
-  int total_txn_count = 0;
-  uint64_t start_ns = getns();
-
-  int x = 0;
   while (true) {
     auto txn = db->BeginTransaction();
-    int nkey = x++;//std::rand();
+    int nkey = counter++;
     const std::string key = tostr(nkey);
     txn->Put(key, key);
     txn->Commit();
     delete txn;
 
-    if (++txn_count == 2000) {
-      uint64_t dur_ns = getns() - start_ns;
-      double iops = (double)(txn_count * 1000000000ULL) / (double)dur_ns;
-      std::cout << "sha1 dev-backend hostname: iops " << iops << std::endl;
-      std::cout << "validating tree..." << std::flush;
-      //db->validate();
-      std::cout << " done" << std::endl << std::flush;
-      txn_count = 0;
-      start_ns = getns();
-    }
-
-    total_txn_count++;
-    if (stop_after  && total_txn_count >= stop_after)
+    if (counter == 50000)
       break;
+    if (counter % 1000 == 0)
+      std::cout << counter << std::endl;
+  }
+
+  uint64_t count = 0;
+  std::vector<std::thread> threads;
+  for (int i = 0; i < nthreads; i++) {
+    threads.push_back(std::thread([&](){
+      while (true) {
+        auto nkey = rand() % 50000;
+        const std::string key = tostr(nkey);
+        std::string value;
+        assert(db->Get(key, &value) == 0);
+        count++;
+      }
+    }));
+  }
+
+  while (true) {
+    auto start = count;
+    sleep(2);
+    auto total = count - start;
+    std::cout << (double)total / 2.0f << std::endl << std::flush;
   }
 
   delete db;

@@ -5,7 +5,7 @@
 #include <condition_variable>
 
 // TODO: if usage goes above high marker block new txns
-static const size_t low_marker  =  4*1024*1024;
+static const size_t low_marker  =  8589934592ULL;
 //static const size_t high_marker = 8*1024*1024;
 
 void NodeCache::do_vaccum_()
