@@ -47,6 +47,12 @@ class Log {
   virtual int Trim(uint64_t position) = 0;
   virtual int trimAsync(uint64_t position, std::function<void(int)> cb) = 0;
 
+  virtual int listHeads(std::vector<std::string> &heads) = 0;
+  virtual int listHeadsAsync(std::vector<std::string> &heads, std::function<void(int)> cb) = 0;
+
+  virtual int listLinks(std::vector<std::string> &links) = 0;
+  virtual int listLinksAsync(std::vector<std::string> &links, std::function<void(int)> cb) = 0;
+
  public:
   virtual int StripeWidth() = 0;
 

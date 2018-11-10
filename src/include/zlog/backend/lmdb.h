@@ -34,6 +34,10 @@ class LMDBBackend : public Backend {
   int OpenLog(const std::string& name, std::string *hoid,
       std::string *prefix_out) override;
 
+  int ListLinks(std::vector<std::string> &loids_out) override;
+
+  int ListHeads(std::vector<std::string> &ooids_out) override;
+
   int ReadViews(const std::string& hoid,
       uint64_t epoch, uint32_t max_views,
       std::map<uint64_t, std::string> *views_out) override;
@@ -122,6 +126,22 @@ class LMDBBackend : public Backend {
       assert(ret == 0 || ret == MDB_NOTFOUND);
       if (ret == MDB_NOTFOUND)
         return -ENOENT;
+      return 0;
+    }
+
+    int GetAll(std::vector<MDB_val> &keys) {
+      MDB_cursor *cursor;
+      int ret = mdb_cursor_open(txn, be->db_obj, &cursor);
+      // TODO ret assertions
+      MDB_val key;
+      ret = mdb_cursor_get(cursor, &key, nullptr, MDB_FIRST);
+      if (ret == 0) {
+        keys.push_back(key);
+      }
+      while ((ret = mdb_cursor_get(cursor, &key, nullptr, MDB_NEXT)) == 0) {
+        keys.push_back(key);
+      }
+      assert(ret == MDB_NOTFOUND);
       return 0;
     }
 

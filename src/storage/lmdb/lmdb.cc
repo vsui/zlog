@@ -179,6 +179,35 @@ int LMDBBackend::OpenLog(const std::string& name, std::string *hoid_out,
 
   return 0;
 }
+int LMDBBackend::ListLinks(std::vector<std::string> &loids_out) {
+  auto txn = NewTransaction(true);
+  std::vector<MDB_val> keys;
+  int ret = txn.GetAll(keys);
+  if (ret) {
+    txn.Abort();
+    return ret;
+  }
+  std::transform(keys.cbegin(), keys.cend(), loids_out.begin(), [](MDB_val key) {
+    return std::string(reinterpret_cast<const char *>(key.mv_data), key.mv_size);
+  });
+
+  return 0;
+}
+
+int LMDBBackend::ListHeads(std::vector<std::string> &ooids_out) {
+  auto txn = NewTransaction(true);
+  std::vector<MDB_val> keys;
+  int ret = txn.GetAll(keys);
+  if (ret) {
+    txn.Abort();
+    return ret;
+  }
+  std::transform(keys.cbegin(), keys.cend(), ooids_out.begin(), [](MDB_val key) {
+      return std::string(reinterpret_cast<const char *>(key.mv_data), key.mv_size);
+  });
+
+  return 0;
+}
 
 int LMDBBackend::ReadViews(const std::string& hoid, uint64_t epoch,
     uint32_t max_views, std::map<uint64_t, std::string> *views_out)

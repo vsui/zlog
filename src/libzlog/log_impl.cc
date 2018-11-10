@@ -466,6 +466,27 @@ int LogImpl::trimAsync(uint64_t position, std::function<void(int)> cb)
   return 0;
 }
 
+int LogImpl::listHeads(std::vector<std::string> &heads) {
+  // TODO implement
+  return 0;
+}
+
+
+int LogImpl::listHeadsAsync(std::vector<std::string> &heads, std::function<void(int)> cb) {
+  // TODO implement
+  return 0;
+}
+
+int LogImpl::listLinks(std::vector<std::string> &links) {
+  // TODO implement
+  return 0;
+}
+
+int LogImpl::listLinksAsync(std::vector<std::string> &links, std::function<void(int)> cb) {
+  // TODO implement
+  return 0;
+}
+
 void LogImpl::queue_op(std::unique_ptr<LogOp> op)
 {
   std::lock_guard<std::mutex> lk(lock);
