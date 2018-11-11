@@ -187,13 +187,6 @@ class LogImpl : public Log {
   int fillAsync(uint64_t position, std::function<void(int)> cb) override;
   int trimAsync(uint64_t position, std::function<void(int)> cb) override;
 
-  int listHeads(std::vector<std::string> &heads) override;
-  int listHeadsAsync(std::vector<std::string> &heads, std::function<void(int)> cb) override;
-
-  int listLinks(std::vector<std::string> &links) override;
-  int listLinksAsync(std::vector<std::string> &links, std::function<void(int)> cb) override;
-
-
  public:
   int StripeWidth() override {
     assert(0);
