@@ -1,4 +1,5 @@
 #pragma once
+#include <cstring>
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -129,17 +130,23 @@ class LMDBBackend : public Backend {
       return 0;
     }
 
-    int GetAll(std::vector<MDB_val> &keys) {
+    int GetAll(const std::string& prefix, std::vector<MDB_val> &keys) {
       MDB_cursor *cursor;
       int ret = mdb_cursor_open(txn, be->db_obj, &cursor);
-      // TODO ret assertions
+      assert(ret == 0);
       MDB_val key;
       ret = mdb_cursor_get(cursor, &key, nullptr, MDB_FIRST);
-      if (ret == 0) {
+      if (ret == MDB_NOTFOUND) {
+        return 0;
+      }
+      assert(ret == 0);
+      if (startsWith(key, prefix)) {
         keys.push_back(key);
       }
       while ((ret = mdb_cursor_get(cursor, &key, nullptr, MDB_NEXT)) == 0) {
-        keys.push_back(key);
+        if (startsWith(key, prefix)) {
+          keys.push_back(key);
+        }
       }
       assert(ret == MDB_NOTFOUND);
       return 0;
@@ -163,6 +170,12 @@ class LMDBBackend : public Backend {
       v.mv_size = val.size();
       v.mv_data = (void*)val.data();
       return Put(key, v, exclusive);
+    }
+
+  private:
+    bool startsWith(const MDB_val &val, const std::string &prefix) {
+      return val.mv_size >= prefix.size()
+         && std::strncmp(reinterpret_cast<const char*>(val.mv_data), prefix.c_str(), prefix.size()) == 0;
     }
   };
 
